@@ -62,7 +62,7 @@ export default function Settings() {
     };
 
     return (
-        <div className="min-h-screen bg-[#0f172a] text-white py-20 px-4">
+        <div className="min-h-screen bg-[#0f172a] text-white pb-20 pt-32 px-4">
             <div className="max-w-6xl mx-auto">
                 {/* Page Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
@@ -93,8 +93,8 @@ export default function Settings() {
                                     key={item.id}
                                     onClick={() => setActiveTab(item.id)}
                                     className={`w-full flex items-center justify-between px-5 py-4 rounded-2xl font-bold transition-all ${activeTab === item.id
-                                            ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-500/20'
-                                            : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                                        ? 'bg-indigo-600 text-white shadow-xl shadow-indigo-500/20'
+                                        : 'text-gray-400 hover:bg-white/5 hover:text-white'
                                         }`}
                                 >
                                     <div className="flex items-center gap-3">
