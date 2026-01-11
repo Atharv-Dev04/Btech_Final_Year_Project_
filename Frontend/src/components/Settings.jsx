@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { api } from '../services/api';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     User,
@@ -21,11 +22,31 @@ import {
 export default function Settings() {
     const [activeTab, setActiveTab] = useState('profile');
     const [userData, setUserData] = useState({
-        username: 'atharv',
-        email: 'atharv.dev@tazakhabar.ai',
-        phone: '9876543210',
-        bio: 'Senior News Analyst and Content Strategist specializing in AI-driven intelligence.'
+        username: '',
+        email: '',
+        phone: '',
+        bio: ''
     });
+
+    useEffect(() => {
+        const fetchUserData = async () => {
+            try {
+                const response = await api.getMe();
+                // Assuming response.data contains the user object or response itself is the user object
+                // Adjust based on actual API structure. Usually it's response.data or response
+                const user = response.data || response;
+                setUserData({
+                    username: user.username || '',
+                    email: user.email || '',
+                    phone: user.phone || '',
+                    bio: user.bio || ''
+                });
+            } catch (error) {
+                console.error("Failed to fetch user data", error);
+            }
+        };
+        fetchUserData();
+    }, []);
 
     // Password change states
     const [showPasswordModal, setShowPasswordModal] = useState(false);
@@ -52,13 +73,30 @@ export default function Settings() {
         return name ? name.charAt(0).toUpperCase() : 'U';
     };
 
-    const handleSave = () => {
-        // Here you would typically call an API
-        console.log('Saving profile...', userData);
-    };
+
+
+    const [status, setStatus] = useState({ type: '', message: '' });
+    const [isSaving, setIsSaving] = useState(false);
 
     const togglePasswordVisibility = (field) => {
         setShowPasswords(prev => ({ ...prev, [field]: !prev[field] }));
+    };
+
+    const handleSave = async () => {
+        setIsSaving(true);
+        setStatus({ type: '', message: '' });
+        try {
+            await api.updateUser(userData);
+            setStatus({ type: 'success', message: 'Profile updated! Refreshing...' });
+
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } catch (error) {
+            console.error("Failed to update profile", error);
+            setStatus({ type: 'error', message: error.message || 'Failed to update profile. Please check connection.' });
+            setIsSaving(false);
+        }
     };
 
     return (
@@ -76,13 +114,32 @@ export default function Settings() {
                         </button>
                         <button
                             onClick={handleSave}
-                            className="px-8 py-3 rounded-2xl bg-indigo-600 text-white font-bold shadow-lg shadow-indigo-500/20 hover:bg-indigo-500 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+                            disabled={isSaving}
+                            className="px-8 py-3 rounded-2xl bg-indigo-600 text-white font-bold shadow-lg shadow-indigo-500/20 hover:bg-indigo-500 hover:scale-105 active:scale-95 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            <Save size={18} />
-                            Save Changes
+                            {isSaving ? (
+                                <>
+                                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                    Saving...
+                                </>
+                            ) : (
+                                <>
+                                    <Save size={18} />
+                                    Save Changes
+                                </>
+                            )}
                         </button>
                     </div>
                 </div>
+
+                {status.message && (
+                    <div className={`mb-8 p-4 rounded-2xl font-bold border ${status.type === 'success'
+                        ? 'bg-green-500/10 border-green-500/20 text-green-400'
+                        : 'bg-red-500/10 border-red-500/20 text-red-400'
+                        }`}>
+                        {status.message}
+                    </div>
+                )}
 
                 <div className="grid lg:grid-cols-[280px,1fr] gap-12">
                     {/* Navigation Sidebar */}

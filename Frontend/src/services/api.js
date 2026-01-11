@@ -51,13 +51,17 @@ export const api = {
             body: JSON.stringify({ username, password }),
         }),
 
-    register: (username, email, password) =>
+    register: (username, email, password, phone) =>
         request('/auth/register', {
             method: 'POST',
-            body: JSON.stringify({ username, email, password }),
+            body: JSON.stringify({ username, email, password, phone }),
         }),
 
     getMe: () => request('/auth/me'),
+    updateUser: (data) => request('/auth/me', {
+        method: 'PUT',
+        body: JSON.stringify(data)
+    }),
 
     // Documents
     uploadDocument: (file) => {

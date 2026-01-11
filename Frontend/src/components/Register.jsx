@@ -25,13 +25,14 @@ const countries = [
 ];
 
 export default function Register({ onRegister, onSwitchToLogin }) {
-    const [method, setMethod] = useState('email'); // 'email', 'phone'
+    // const [method, setMethod] = useState('email'); // Removed method state
     const [isLoading, setIsLoading] = useState(false);
 
     // OTP State
-    const [showOTP, setShowOTP] = useState(false);
-    const [otp, setOtp] = useState(['', '', '', '', '', '']);
-    const otpInputRefs = useRef([]);
+    // OTP State - Removed for now as we are just collecting phone number
+    // const [showOTP, setShowOTP] = useState(false);
+    // const [otp, setOtp] = useState(['', '', '', '', '', '']);
+    // const otpInputRefs = useRef([]);
 
     const [showPassword, setShowPassword] = useState(false);
     const [selectedCountry, setSelectedCountry] = useState(countries[0]);
@@ -45,56 +46,20 @@ export default function Register({ onRegister, onSwitchToLogin }) {
     });
     const [error, setError] = useState('');
 
-    useEffect(() => {
-        if (showOTP && otpInputRefs.current[0]) {
-            otpInputRefs.current[0].focus();
-        }
-    }, [showOTP]);
-
-    const handleOtpChange = (index, value) => {
-        if (isNaN(value)) return;
-
-        const newOtp = [...otp];
-        newOtp[index] = value;
-        setOtp(newOtp);
-
-        if (value !== '' && index < 5) {
-            otpInputRefs.current[index + 1].focus();
-        }
-    };
-
-    const handleKeyDown = (index, e) => {
-        if (e.key === 'Backspace' && otp[index] === '' && index > 0) {
-            otpInputRefs.current[index - 1].focus();
-        }
-    };
+    // OTP handlers removed
 
     const handleRegister = async (e) => {
         e.preventDefault();
         setError('');
 
-        if (method === 'phone' && !showOTP) {
-            setIsLoading(true);
-            setTimeout(() => {
-                setIsLoading(false);
-                setShowOTP(true);
-            }, 1000);
-            return;
-        }
-
         setIsLoading(true);
         try {
-            if (method === 'email') {
-                await api.register(formData.username, formData.email, formData.password);
-                const loginRes = await api.login(formData.username, formData.password);
-                localStorage.setItem('token', loginRes.data.token);
-                localStorage.setItem('user', JSON.stringify(loginRes.data.user));
-            } else {
-                // Mock phone registration success
-                // In real app, verify OTP and register
-                localStorage.setItem('token', 'mock-token-phone');
-                localStorage.setItem('user', JSON.stringify({ username: formData.username, phone: formData.phone }));
-            }
+            // Updated to include phone in registration
+            await api.register(formData.username, formData.email, formData.password, formData.phone);
+            const loginRes = await api.login(formData.username, formData.password);
+
+            localStorage.setItem('token', loginRes.data.token);
+            localStorage.setItem('user', JSON.stringify(loginRes.data.user));
 
             setIsLoading(false);
             onRegister();
@@ -122,181 +87,107 @@ export default function Register({ onRegister, onSwitchToLogin }) {
                     <p className="text-gray-400 font-medium">Join 10k+ analysts scaling their intelligence.</p>
                 </div>
 
-                {/* Auth Methods */}
-                <div className="flex p-1.5 bg-white/5 rounded-2xl mb-8 border border-white/10">
-                    <button
-                        onClick={() => { setMethod('email'); setShowOTP(false); }}
-                        className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${method === 'email' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:text-white'}`}
-                    >
-                        Email
-                    </button>
-                    <button
-                        onClick={() => setMethod('phone')}
-                        className={`flex-1 py-3 rounded-xl font-bold text-sm transition-all ${method === 'phone' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-gray-400 hover:text-white'}`}
-                    >
-                        Phone Number
-                    </button>
-                </div>
+                {/* Auth Methods - Removed Tabs */}
+                {/* <div className="flex p-1.5 bg-white/5 rounded-2xl mb-8 border border-white/10"> ... </div> */}
 
                 <form onSubmit={handleRegister} className="space-y-6">
-                    <AnimatePresence mode="wait">
-                        {method === 'email' ? (
-                            <motion.div
-                                key="email"
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -20 }}
-                                className="space-y-4"
-                            >
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Username</label>
-                                    <div className="relative group">
-                                        <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-400 transition-colors" size={18} />
-                                        <input
-                                            type="text"
-                                            placeholder="Username"
-                                            required
-                                            value={formData.username}
-                                            onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                                            className="w-full pl-12 pr-6 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-medium text-white placeholder-gray-500 focus:bg-white/10"
-                                        />
-                                    </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Email Address</label>
-                                    <div className="relative group">
-                                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-400 transition-colors" size={18} />
-                                        <input
-                                            type="email"
-                                            placeholder="Email"
-                                            required
-                                            value={formData.email}
-                                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                            className="w-full pl-12 pr-6 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-medium text-white placeholder-gray-500 focus:bg-white/10"
-                                        />
-                                    </div>
-                                </div>
-                                <div className="space-y-2">
-                                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Create Password</label>
-                                    <div className="relative group">
-                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-400 transition-colors" size={18} />
-                                        <input
-                                            type={showPassword ? "text" : "password"}
-                                            placeholder="Min. 8 characters"
-                                            required
-                                            value={formData.password}
-                                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                                            className="w-full pl-12 pr-12 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-medium text-white placeholder-gray-500 focus:bg-white/10"
-                                        />
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowPassword(!showPassword)}
-                                            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200 transition-colors"
-                                        >
-                                            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                                        </button>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        ) : (
-                            <motion.div
-                                key="phone"
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -20 }}
-                                className="space-y-6"
-                            >
-                                {!showOTP && (
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Username</label>
-                                        <div className="relative group">
-                                            <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-400 transition-colors" size={18} />
-                                            <input
-                                                type="text"
-                                                placeholder="Username"
-                                                required
-                                                value={formData.username}
-                                                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                                                className="w-full pl-12 pr-6 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-medium text-white placeholder-gray-500 focus:bg-white/10"
-                                            />
-                                        </div>
-                                    </div>
-                                )}
+                    {/* Consolidated Form */}
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Username</label>
+                            <div className="relative group">
+                                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-400 transition-colors" size={18} />
+                                <input
+                                    type="text"
+                                    placeholder="Username"
+                                    required
+                                    value={formData.username}
+                                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                                    className="w-full pl-12 pr-6 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-medium text-white placeholder-gray-500 focus:bg-white/10"
+                                />
+                            </div>
+                        </div>
 
-                                {!showOTP ? (
-                                    <div className="space-y-2">
-                                        <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Phone Number</label>
-                                        <div className="relative group">
-                                            <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2 border-r border-white/10 pr-2 mr-3 text-gray-400 font-bold cursor-pointer hover:text-white transition-colors" onClick={() => setShowCountryDropdown(!showCountryDropdown)}>
-                                                <img src={selectedCountry.flag} alt={selectedCountry.country} className="w-5 rounded-sm" />
-                                                <span>{selectedCountry.code}</span>
-                                                <ChevronDown size={14} className="text-gray-400" />
-                                            </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Email Address</label>
+                            <div className="relative group">
+                                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-400 transition-colors" size={18} />
+                                <input
+                                    type="email"
+                                    placeholder="Email"
+                                    required
+                                    value={formData.email}
+                                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                                    className="w-full pl-12 pr-6 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-medium text-white placeholder-gray-500 focus:bg-white/10"
+                                />
+                            </div>
+                        </div>
 
-                                            {/* Country Dropdown */}
-                                            {showCountryDropdown && (
-                                                <div className="absolute top-14 left-0 bg-[#0f172a] border border-white/10 rounded-xl shadow-xl z-50 w-40 overflow-hidden">
-                                                    {countries.map((country, index) => (
-                                                        <button
-                                                            key={index}
-                                                            type="button"
-                                                            onClick={() => {
-                                                                setSelectedCountry(country);
-                                                                setShowCountryDropdown(false);
-                                                            }}
-                                                            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors text-sm font-medium text-gray-300 hover:text-white"
-                                                        >
-                                                            <img src={country.flag} alt={country.country} className="w-5 rounded-sm" />
-                                                            {country.code}
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            )}
+                        {/* Phone Number Input */}
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Phone Number</label>
+                            <div className="relative group">
+                                <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2 border-r border-white/10 pr-2 mr-3 text-gray-400 font-bold cursor-pointer hover:text-white transition-colors" onClick={() => setShowCountryDropdown(!showCountryDropdown)}>
+                                    <img src={selectedCountry.flag} alt={selectedCountry.country} className="w-5 rounded-sm" />
+                                    <span>{selectedCountry.code}</span>
+                                    <ChevronDown size={14} className="text-gray-400" />
+                                </div>
 
-                                            <input
-                                                type="tel"
-                                                placeholder="xxxxx-xxxxx"
-                                                required
-                                                value={formData.phone}
-                                                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                                className="w-full pl-36 pr-6 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-medium text-white placeholder-gray-500 focus:bg-white/10"
-                                            />
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-4">
-                                        <div className="text-center">
-                                            <p className="text-sm font-bold text-gray-400">Enter verification code sent to</p>
-                                            <p className="text-lg font-black text-white">{selectedCountry.code} {formData.phone || 'xxxxx-xxxxx'}</p>
-                                        </div>
-                                        <div className="flex gap-2 justify-between">
-                                            {otp.map((digit, index) => (
-                                                <input
-                                                    key={index}
-                                                    ref={el => otpInputRefs.current[index] = el}
-                                                    type="text"
-                                                    maxLength={1}
-                                                    value={digit}
-                                                    onChange={(e) => handleOtpChange(index, e.target.value)}
-                                                    onKeyDown={(e) => handleKeyDown(index, e)}
-                                                    className="w-12 h-14 bg-white/5 border border-white/10 rounded-xl text-center text-xl font-bold text-white focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none transition-all focus:bg-white/10"
-                                                />
-                                            ))}
-                                        </div>
-                                        <div className="text-center">
+                                {/* Country Dropdown */}
+                                {showCountryDropdown && (
+                                    <div className="absolute top-14 left-0 bg-[#0f172a] border border-white/10 rounded-xl shadow-xl z-50 w-40 overflow-hidden">
+                                        {countries.map((country, index) => (
                                             <button
+                                                key={index}
                                                 type="button"
-                                                onClick={() => setShowOTP(false)}
-                                                className="text-xs font-bold text-indigo-400 uppercase tracking-widest hover:text-indigo-300 hover:underline"
+                                                onClick={() => {
+                                                    setSelectedCountry(country);
+                                                    setShowCountryDropdown(false);
+                                                }}
+                                                className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors text-sm font-medium text-gray-300 hover:text-white"
                                             >
-                                                Change Phone Number
+                                                <img src={country.flag} alt={country.country} className="w-5 rounded-sm" />
+                                                {country.code}
                                             </button>
-                                        </div>
+                                        ))}
                                     </div>
                                 )}
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+
+                                <input
+                                    type="tel"
+                                    placeholder="xxxxx-xxxxx"
+                                    // Phone is optional or required? User said "add phone number... for verification in future". Usually safer to make it optional if not explicitly stated, but for consistency with "users email AND phone number" let's keep it required unless user says otherwise. 
+                                    // Actually user phrasing: "remove the phone number option and add phone number in email tab" implies it's just another field. I'll make it required to ensure data collection as requested.
+                                    required
+                                    value={formData.phone}
+                                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                    className="w-full pl-36 pr-6 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-medium text-white placeholder-gray-500 focus:bg-white/10"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-gray-400 uppercase tracking-widest ml-1">Create Password</label>
+                            <div className="relative group">
+                                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-indigo-400 transition-colors" size={18} />
+                                <input
+                                    type={showPassword ? "text" : "password"}
+                                    placeholder="Min. 8 characters"
+                                    required
+                                    value={formData.password}
+                                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                    className="w-full pl-12 pr-12 py-4 bg-white/5 border border-white/10 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-medium text-white placeholder-gray-500 focus:bg-white/10"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200 transition-colors"
+                                >
+                                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
 
                     {error && (
                         <p className="text-red-400 text-xs font-bold bg-red-500/10 p-3 rounded-xl border border-red-500/20 italic">
@@ -313,7 +204,7 @@ export default function Register({ onRegister, onSwitchToLogin }) {
                             <Loader2 className="animate-spin" size={20} />
                         ) : (
                             <>
-                                {method === 'phone' && !showOTP ? 'Send Code' : 'Create Account'}
+                                Create Account
                                 <ArrowRight size={20} />
                             </>
                         )}

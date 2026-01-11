@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react';
 
-const InteractiveBackground = () => {
+const InteractiveBackground = ({ showWaves = false }) => {
     const canvasRef = useRef(null);
 
     useEffect(() => {
@@ -138,10 +138,12 @@ const InteractiveBackground = () => {
                 particles.push(new Particle());
             }
 
-            sentimentWaves.push(new SentimentWave('positive'));
-            sentimentWaves.push(new SentimentWave('positive'));
-            sentimentWaves.push(new SentimentWave('negative'));
-            sentimentWaves.push(new SentimentWave('negative'));
+            if (showWaves) {
+                sentimentWaves.push(new SentimentWave('positive'));
+                sentimentWaves.push(new SentimentWave('positive'));
+                sentimentWaves.push(new SentimentWave('negative'));
+                sentimentWaves.push(new SentimentWave('negative'));
+            }
 
             keywords.forEach((word, i) => {
                 const fw = new FloatingWord(word);
